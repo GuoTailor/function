@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class StaticConf {
     private static StaticConf instance = null;
     private static final String redisUrl = "redis://:****@****:6379/1";
+    private static volatile StaticConf instance = null;
     private ObjectMapper mapper;
     private RedisClient redisClient;
     private StatefulRedisConnection<String, String> connection;

@@ -9,10 +9,10 @@ import java.util.concurrent.*;
 
 public class ThreadManager {
     private static final String TAG = "ThreadManager";
-    private ExecutorService executorService;
-    private static ThreadManager instance;
+    private final ExecutorService executorService;
+    private static volatile ThreadManager instance;
     private static int poolSize = 8;
-    private static int capacity = 32;
+    private static int capacity = 256;
 
     /**
      * 私有化构造函数，使用单列模式
@@ -21,12 +21,8 @@ public class ThreadManager {
         executorService = new ThreadPoolExecutor(poolSize, poolSize, 0L,
                 TimeUnit.MINUTES, new LinkedBlockingQueue<>(capacity), (run, executor) -> {
             if (!executor.isShutdown()) {
-                try {
-                    boolean offer = executor.getQueue().offer(run, 1, TimeUnit.SECONDS);
-                    if (!offer) run.run();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                boolean offer = executor.getQueue().offer(run);
+                if (!offer) run.run();
             }
         });
     }

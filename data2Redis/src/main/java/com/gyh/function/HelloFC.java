@@ -20,12 +20,15 @@ public class HelloFC implements StreamRequestHandler, FunctionInitializer {
     @Override
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
         Map<String, Object> map = conf.getMapper().readValue(inputStream, conf.getJavaType());
-        //context.getLogger().info(conf.getMapper().writeValueAsString(map));
-        //outputStream.write("hello world\n".getBytes());
+        context.getLogger().info(conf.getMapper().writeValueAsString(map));
+//        outputStream.write("hello world\n".getBytes());
         final String devicesName = DataDefine.get(map, DataDefine.deviceName);
         if (devicesName != null) {
             Map<String, Object> items = (Map) map.get("items");
             if (items != null) {
+                if (!items.isEmpty()) {
+                    conf.getSyncCommands().hset(devicesName, "TS", String.valueOf(System.currentTimeMillis()));
+                }
                 for (Map.Entry<String, Object> entry : items.entrySet()) {
                     Map<String, Object> value = (Map) entry.getValue();
                     if (value != null) {
@@ -35,7 +38,7 @@ public class HelloFC implements StreamRequestHandler, FunctionInitializer {
                             oldV = conf.getSyncCommands().hget(devicesName, "S50");
                             context.getLogger().info(devicesName + " oldV " + oldV);
                         }
-                        conf.getSyncCommands().hset(devicesName, entry.getKey(), conf.getMapper().writeValueAsString(v));
+                        conf.getSyncCommands().hset(devicesName, entry.getKey(), v.toString());
                         if ("S50".equals(entry.getKey())) {
                             if (oldV != null && !oldV.equals(v.toString())) {   // 一定要toString，v是Integer类型的，比较是同不过
                                 updateStatus(context, devicesName, v.toString());
